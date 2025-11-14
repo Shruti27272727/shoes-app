@@ -84,7 +84,10 @@ if (user && user.id) {
           type="text"
           placeholder="Search by name, brand, or color"
           value={searchItem}
-          onChange={(e) => setSearchItem(e.target.value)}
+          onChange={(e) => {
+  setCurrentPage(1);   
+  setSearchItem(e.target.value);
+          }}
           style={{
             padding: "10px",
             width: "300px",

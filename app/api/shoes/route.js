@@ -1,4 +1,3 @@
-// app/api/shoes/route.js
 import { NextResponse } from "next/server";
 import pool from "../../../lib/db";
 
