@@ -1,0 +1,173 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+const Home = () => {
+  const router = useRouter();
+  const [shoes, setShoes] = useState([]);
+  const [searchItem, setSearchItem] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const fetchShoes = async (search = "", page = 1) => {
+    try {
+      const res = await fetch(`/api/shoes?search=${search}&page=${page}`);
+      const data = await res.json();
+      setShoes(data.data);
+      setTotalPages(data.totalPages);
+    } catch (error) {
+      console.error("Error fetching shoes:", error);
+    }
+  };
+
+ useEffect(() => {
+  
+  const delayDebounce = setTimeout(() => {
+    fetchShoes(searchItem, currentPage);
+  }, 500);
+
+  return () => clearTimeout(delayDebounce);
+}, [searchItem, currentPage]);
+
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  const handleBuy = (name, price) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+   
+let userId;
+if (user && user.id) {
+  userId = user.id;
+} else {
+  userId = null; 
+}
+
+
+    if (!userId) {
+      alert("Please log in to continue.");
+      router.push("/Login");
+      return;
+    }
+
+    setTimeout(() => {
+      router.push(`/Cart?name=${name}&price=${price}&userId=${userId}`);
+    }, 1000);
+  };
+  const handleGoToCart = () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || !user.id) {
+      alert("Please log in to view your cart.");
+      router.push("/Login");
+      return;
+    }
+    router.push(`/Cart?userId=${user.id}`);
+  };
+  return (
+    <div>
+      <h1
+        style={{
+          textAlign: "center",
+          padding: "40px",
+          fontFamily: "bold",
+          fontSize: "40px",
+        }}
+      >
+        Welcome to Shoes.com
+      </h1>
+
+      <div style={{ textAlign: "center", marginBottom: "10px" }}>
+        <input
+          type="text"
+          placeholder="Search by name, brand, or color"
+          value={searchItem}
+          onChange={(e) => setSearchItem(e.target.value)}
+          style={{
+            padding: "10px",
+            width: "300px",
+            borderRadius: "10px",
+            border: "solid",
+            fontSize: "16px",
+          }}
+        />
+      </div>
+
+
+      <div className="shoe-grid">
+        {shoes.length > 0 ? (
+          shoes.map((shoe, index) => (
+            <div key={index} className="shoe-card">
+              <img
+                src={shoe.img}
+                alt={shoe.name}
+                className="shoe-image"
+                style={{ width: "200px", height: "200px" }}
+              />
+              <ul>
+                <li><b>Name:</b> {shoe.name}</li>
+                <li><b>Brand:</b> {shoe.brand}</li>
+                <li><b>Color:</b> {shoe.color}</li>
+                <li><b>Size:</b> {shoe.size}</li>
+                <li><b>Price:</b> ₹{shoe.price}</li>
+              </ul>
+              <button
+                onClick={() => handleBuy(shoe.name, shoe.price)}
+                style={{
+                  backgroundColor: "blue",
+                  color: "white",
+                  padding: "7px",
+                  width: "200px",
+                  borderRadius: "7px",
+                  cursor: "pointer",
+                }}
+              >
+                Buy
+              </button>
+            </div>
+          ))
+        ) : (
+          <p style={{ textAlign: "center", fontSize: "18px" }}>No results found.</p>
+        )}
+      </div>
+      <button onClick={handleGoToCart}
+  style={{
+    backgroundColor: "green",
+    color: "white",
+    padding: "7px",
+    width: "200px",
+    borderRadius: "7px",
+    cursor: "pointer",
+    marginLeft:"660px",
+    
+    
+  }}
+>
+  Go to Cart
+</button>
+
+
+      <div style={{ textAlign: "center" }}>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          style={{ margin: "10px" }}
+        >
+          Prev
+        </button>
+        <span> Page {currentPage} of {totalPages} </span>
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          style={{ margin: "10px" }}
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default Home;
