@@ -1,6 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import LogoutButton from "../components/LogoutButton";
+
+
 
 const Home = () => {
   const router = useRouter();
@@ -67,7 +70,8 @@ if (user && user.id) {
     router.push(`/Cart?userId=${user.id}`);
   };
   return (
-    <div>
+     
+    <div>  <LogoutButton /> 
       <h1
         style={{
           textAlign: "center",

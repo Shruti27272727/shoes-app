@@ -1,6 +1,7 @@
 "use client";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import LogoutButton from "../components/LogoutButton";
 
 export default function Cart() {
   const searchParams = useSearchParams();
@@ -111,6 +112,7 @@ useEffect(() => {
 
   return (
     <div style={{ textAlign: "center" }}>
+      <LogoutButton />
       {isPaid ? (
         <>
           <h1>Thank You</h1>

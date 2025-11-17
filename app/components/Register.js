@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Register() {
-    const [name, setName] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
@@ -14,7 +14,7 @@ export default function Register() {
     const res = await fetch("/api/Register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({name,  email, password }),
+      body: JSON.stringify({ name, email, password }),
     });
 
     const data = await res.json();
@@ -23,7 +23,6 @@ export default function Register() {
       alert("Registration successful!");
       router.push("/login");
     } else {
-     
       if (data.message && data.message.toLowerCase().includes("exists")) {
         alert("User already exists. Please login.");
         router.push("/login");
@@ -46,7 +45,7 @@ export default function Register() {
     >
       <div
         style={{
-          height: "350px",
+          height: "380px",
           width: "320px",
           borderRadius: "10px",
           backgroundColor: "white",
@@ -70,7 +69,8 @@ export default function Register() {
           }}
         >
           <h2>Register</h2>
-           <input
+
+          <input
             type="text"
             placeholder="Enter your name"
             value={name}
@@ -125,6 +125,25 @@ export default function Register() {
           >
             Submit
           </button>
+
+          
+          <button
+            type="button"
+            onClick={() => router.push("/login")}
+            style={{
+              backgroundColor: "orange",
+              color: "black",
+              padding: "8px",
+              borderRadius: "5px",
+              width: "50%",
+              cursor: "pointer",
+              border: "none",
+              fontWeight: "bold",
+            }}
+          >
+            Login
+          </button>
+
         </form>
       </div>
     </div>
