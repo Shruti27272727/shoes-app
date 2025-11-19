@@ -6,10 +6,10 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
     const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = 10; 
+    const limit = 10;
     const offset = (page - 1) * limit;
 
-  
+
     const query = `
       SELECT * FROM shoes
       WHERE LOWER(name) LIKE LOWER($1)
@@ -22,7 +22,7 @@ export async function GET(req) {
     const values = [`%${search}%`, limit, offset];
     const result = await pool.query(query, values);
 
-  
+
     const countQuery = `
       SELECT COUNT(*) FROM shoes
       WHERE LOWER(name) LIKE LOWER($1)

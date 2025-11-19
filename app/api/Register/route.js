@@ -17,13 +17,13 @@ export async function POST(req) {
       return NextResponse.json({ message: "Password is required" }, { status: 400 });
     }
 
-   
+
     const existingUser = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
     if (existingUser.rows.length > 0) {
       return NextResponse.json({ message: "User already exists" }, { status: 400 });
     }
 
-   
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
 

@@ -3,14 +3,26 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import LogoutButton from "../components/LogoutButton";
 
-
-
 const Home = () => {
   const router = useRouter();
   const [shoes, setShoes] = useState([]);
   const [searchItem, setSearchItem] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [quantities, setQuantities] = useState({});
+
+
+
+  const updateQuantity = (id, value) => {
+    setQuantities((prev) => {
+      const current = prev[id] || 0;
+      const newCount = current + value;
+      if (newCount < 0) return { ...prev, [id]: 0 };
+      return { ...prev, [id]: newCount };
+    });
+  };
+
+
 
   const fetchShoes = async (search = "", page = 1) => {
     try {
@@ -23,43 +35,32 @@ const Home = () => {
     }
   };
 
- useEffect(() => {
-  
-  const delayDebounce = setTimeout(() => {
-    fetchShoes(searchItem, currentPage);
-  }, 500);
-
-  return () => clearTimeout(delayDebounce);
-}, [searchItem, currentPage]);
-
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      fetchShoes(searchItem, currentPage);
+    }, 500);
+    return () => clearTimeout(delayDebounce);
+  }, [searchItem, currentPage]);
 
   const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-    }
+    if (newPage >= 1 && newPage <= totalPages) setCurrentPage(newPage);
   };
 
-  const handleBuy = (name, price) => {
+  const handleBuy = (shoe) => {
     const user = JSON.parse(localStorage.getItem("user"));
-   
-let userId;
-if (user && user.id) {
-  userId = user.id;
-} else {
-  userId = null; 
-}
-
-
-    if (!userId) {
+    if (!user || !user.id) {
       alert("Please log in to continue.");
       router.push("/Login");
       return;
     }
 
-    setTimeout(() => {
-      router.push(`/Cart?name=${name}&price=${price}&userId=${userId}`);
-    }, 1000);
+    const count = quantities[shoe.id];
+
+    router.push(
+      `/Cart?id=${shoe.id}&name=${shoe.name}&price=${shoe.price}&userId=${user.id}&count=${count}`
+    );
   };
+
   const handleGoToCart = () => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user || !user.id) {
@@ -69,9 +70,10 @@ if (user && user.id) {
     }
     router.push(`/Cart?userId=${user.id}`);
   };
+
   return (
-     
-    <div>  <LogoutButton /> 
+    <div>
+      <LogoutButton />
       <h1
         style={{
           textAlign: "center",
@@ -89,8 +91,8 @@ if (user && user.id) {
           placeholder="Search by name, brand, or color"
           value={searchItem}
           onChange={(e) => {
-  setCurrentPage(1);   
-  setSearchItem(e.target.value);
+            setCurrentPage(1);
+            setSearchItem(e.target.value);
           }}
           style={{
             padding: "10px",
@@ -102,11 +104,10 @@ if (user && user.id) {
         />
       </div>
 
-
       <div className="shoe-grid">
         {shoes.length > 0 ? (
-          shoes.map((shoe, index) => (
-            <div key={index} className="shoe-card">
+          shoes.map((shoe) => (
+            <div key={shoe.id} className="shoe-card">
               <img
                 src={shoe.img}
                 alt={shoe.name}
@@ -120,8 +121,17 @@ if (user && user.id) {
                 <li><b>Size:</b> {shoe.size}</li>
                 <li><b>Price:</b> ₹{shoe.price}</li>
               </ul>
+
+
+              <div className="counter"
+                style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <button onClick={() => updateQuantity(shoe.id, -1)}>-</button>
+                <p>{quantities[shoe.id] || 0}</p>
+                <button onClick={() => updateQuantity(shoe.id, 1)}>+</button>
+              </div>
+
               <button
-                onClick={() => handleBuy(shoe.name, shoe.price)}
+                onClick={() => handleBuy(shoe)}
                 style={{
                   backgroundColor: "blue",
                   color: "white",
@@ -139,22 +149,21 @@ if (user && user.id) {
           <p style={{ textAlign: "center", fontSize: "18px" }}>No results found.</p>
         )}
       </div>
-      <button onClick={handleGoToCart}
-  style={{
-    backgroundColor: "green",
-    color: "white",
-    padding: "7px",
-    width: "200px",
-    borderRadius: "7px",
-    cursor: "pointer",
-    marginLeft:"660px",
-    
-    
-  }}
->
-  Go to Cart
-</button>
 
+      <button
+        onClick={handleGoToCart}
+        style={{
+          backgroundColor: "green",
+          color: "white",
+          padding: "7px",
+          width: "200px",
+          borderRadius: "7px",
+          cursor: "pointer",
+          marginLeft: "660px",
+        }}
+      >
+        Go to Cart
+      </button>
 
       <div style={{ textAlign: "center" }}>
         <button

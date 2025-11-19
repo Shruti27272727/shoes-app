@@ -6,113 +6,105 @@ import LogoutButton from "../components/LogoutButton";
 export default function Cart() {
   const searchParams = useSearchParams();
   const router = useRouter();
+
   const name = searchParams.get("name");
   const price = searchParams.get("price");
+  const id = searchParams.get("id");
+  const count = parseInt(searchParams.get("count")) || 1;
 
   const [cartItems, setCartItems] = useState([]);
   const [isPaid, setIsPaid] = useState(false);
   const [user, setUser] = useState(null);
 
-useEffect(() => {
-  const checkUser = async () => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (!storedUser) {
-      alert("Please login first");
-      router.push("/login");
-      return;
-    }
-    setUser(storedUser);
-  };
-  checkUser();
-}, [router]); 
 
-  
+  useEffect(() => {
+    const checkUser = async () => {
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      if (!storedUser) {
+        alert("Please login first");
+        router.push("/login");
+        return;
+      }
+      setUser(storedUser);
+    };
+    checkUser();
+  }, [router]);
+
+
   useEffect(() => {
     if (!user) return;
 
     const fetchCart = async () => {
-      try {
-        const res = await fetch(`/api/cart?user_id=${user.id}`);
-        const data = await res.json();
-        setCartItems(data);
-      } catch (error) {
-        console.error("Error fetching cart:", error);
-      }
+      const res = await fetch(`/api/cart?user_id=${user.id}`);
+      const data = await res.json();
+      setCartItems(data);
     };
 
     fetchCart();
   }, [user]);
 
- 
+
   useEffect(() => {
     const addItem = async () => {
-      if (!user || !name || !price) return;
+      if (!user || !id) return;
 
-      try {
-        await fetch("/api/cart", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user_id: user.id,
-            name,
-            price,
-          }),
-        });
-
-        
-        const res = await fetch(`/api/cart?user_id=${user.id}`);
-        const data = await res.json();
-        setCartItems(data);
-      } catch (error) {
-        console.error("Error adding to cart:", error);
-      }
-    };
-
-    addItem();
-  }, [name, price, user]);
-
-
-  const handleDelete = async (itemId) => {
-    try {
-      await fetch("/api/cart", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: itemId, user_id: user.id }),
-      });
-
-      const updated = cartItems.filter((item) => item.id !== itemId);
-      setCartItems(updated);
-    } catch (error) {
-      console.error("Error deleting item:", error);
-    }
-  };
-
- 
-  const handlePayment = async () => {
-    try {
       await fetch("/api/cart", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: user.id }),
+        body: JSON.stringify({
+          user_id: user.id,
+          id,
+          name,
+          price,
+          quantity: count,
+        }),
       });
 
-      alert("Payment done successfully!");
-      setCartItems([]);
-      setIsPaid(true);
-    } catch (error) {
-      console.error("Error clearing cart after payment:", error);
-    }
+      const res = await fetch(`/api/cart?user_id=${user.id}`);
+      const data = await res.json();
+      setCartItems(data);
+    };
+
+    addItem();
+  }, [name, price, user, count, id]);
+
+
+  const handleDelete = async (itemId) => {
+    await fetch("/api/cart", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: itemId, user_id: user.id }),
+    });
+
+
+    setCartItems(cartItems.filter((item) => item.item_id !== itemId));
+  };
+
+
+  const handlePayment = async () => {
+    await fetch("/api/cart", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: user.id }),
+    });
+
+    alert("Payment done successfully!");
+    setCartItems([]);
+    setIsPaid(true);
   };
 
   const handleCart = () => {
     router.push("/home");
   };
 
-  const total = cartItems.reduce((sum, item) => sum + Number(item.price), 0);
+  const total = cartItems.reduce(
+    (sum, item) => sum + Number(item.price) * (item.quantity || 1), 0
+  );
 
   return (
     <div style={{ textAlign: "center" }}>
       <LogoutButton />
+
       {isPaid ? (
         <>
           <h1>Thank You</h1>
@@ -123,7 +115,6 @@ useEffect(() => {
               color: "white",
               padding: "10px 20px",
               borderRadius: "8px",
-              cursor: "pointer",
             }}
           >
             Go Back to Home
@@ -139,7 +130,7 @@ useEffect(() => {
             <div>
               {cartItems.map((item) => (
                 <div
-                  key={item.id}
+                  key={item.item_id}
                   style={{
                     margin: "auto",
                     width: "280px",
@@ -152,11 +143,14 @@ useEffect(() => {
                     <strong>Shoe:</strong> {item.name}
                   </p>
                   <p>
+                    <strong>Quantity:</strong> {item.quantity}
+                  </p>
+                  <p>
                     <strong>Price:</strong> ₹{item.price}
                   </p>
 
                   <button
-                    onClick={() => handleDelete(item.id)}
+                    onClick={() => handleDelete(item.item_id)}
                     style={{
                       backgroundColor: "red",
                       color: "white",
@@ -164,7 +158,6 @@ useEffect(() => {
                       width: "100px",
                       borderRadius: "8px",
                       cursor: "pointer",
-                      border: "none",
                     }}
                   >
                     Delete
@@ -183,7 +176,6 @@ useEffect(() => {
                   borderRadius: "6px",
                   width: "120px",
                   cursor: "pointer",
-                  border: "none",
                 }}
               >
                 Pay Now
@@ -201,7 +193,6 @@ useEffect(() => {
               width: "120px",
               cursor: "pointer",
               margin: "10px",
-              border: "none",
             }}
           >
             BUY AGAIN

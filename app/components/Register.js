@@ -126,7 +126,7 @@ export default function Register() {
             Submit
           </button>
 
-          
+
           <button
             type="button"
             onClick={() => router.push("/login")}
