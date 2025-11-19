@@ -80,22 +80,28 @@ export default function Cart() {
     setCartItems(cartItems.filter((item) => item.item_id !== itemId));
   };
 
+const handlePayment = async () => {
+  const res = await fetch("/api/payments", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id: user.id }),
+  });
 
-  const handlePayment = async () => {
-    await fetch("/api/cart", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: user.id }),
-    });
-
-    alert("Payment done successfully!");
+  const data = await res.json();
+  if (res.ok) {
+    alert(`Payment done! Total: ₹${data.total_amount}`);
     setCartItems([]);
-    setIsPaid(true);
-  };
+    setIsPaid(true); 
+  } else {
+    alert("Payment failed: " + data.message);
+  }
+};
 
-  const handleCart = () => {
-    router.push("/home");
-  };
+
+const handleCart = () => {
+  router.push("/home");
+};
+
 
   const total = cartItems.reduce(
     (sum, item) => sum + Number(item.price) * (item.quantity || 1), 0
