@@ -10,8 +10,20 @@ const Home = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [quantities, setQuantities] = useState({});
+  const [sortBy, setSortBy] = useState("");
+  const [wishlist, setWishlist] = useState([]);
 
-
+  const user = JSON.parse(localStorage.getItem("user"));
+  const toggleWishlist = (shoe) => {
+  setWishlist((prev) => {
+    const exists = prev.find(item => item.id === shoe.id);
+    if (exists) {
+      return prev.filter(item => item.id !== shoe.id);
+    } else {
+      return [...prev, shoe];
+    }
+  });
+};
 
   const updateQuantity = (id, value) => {
     setQuantities((prev) => {
@@ -22,13 +34,20 @@ const Home = () => {
     });
   };
 
-
-
-  const fetchShoes = async (search = "", page = 1) => {
+  const fetchShoes = async (search = "", page = 1, sort = sortBy) => {
     try {
       const res = await fetch(`/api/shoes?search=${search}&page=${page}`);
       const data = await res.json();
-      setShoes(data.data);
+
+      let sortedShoes = [...data.data];
+
+      if (sort === "low-high") {
+        sortedShoes.sort((a, b) => a.price - b.price);
+      } else if (sort === "high-low") {
+        sortedShoes.sort((a, b) => b.price - a.price);
+      }
+
+      setShoes(sortedShoes);
       setTotalPages(data.totalPages);
     } catch (error) {
       console.error("Error fetching shoes:", error);
@@ -37,10 +56,10 @@ const Home = () => {
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      fetchShoes(searchItem, currentPage);
+      fetchShoes(searchItem, currentPage, sortBy);
     }, 500);
     return () => clearTimeout(delayDebounce);
-  }, [searchItem, currentPage]);
+  }, [searchItem, currentPage, sortBy]);
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) setCurrentPage(newPage);
@@ -104,6 +123,32 @@ const Home = () => {
         />
       </div>
 
+      <div style={{ textAlign: "center", marginBottom: "15px" }}>
+        <select
+          value={sortBy}
+          onChange={(e) => {
+            setSortBy(e.target.value);
+          }}
+          style={{
+            padding: "10px",
+            borderRadius: "10px",
+            fontSize: "16px",
+            color: "white",
+            width: "200px",
+          }}
+        >
+          <option value="" style={{ color: "black" }}>
+            Sort by Price
+          </option>
+          <option value="low-high" style={{ color: "black" }}>
+            Price: Low → High
+          </option>
+          <option value="high-low" style={{ color: "black" }}>
+            Price: High → Low
+          </option>
+        </select>
+      </div>
+
       <div className="shoe-grid">
         {shoes.length > 0 ? (
           shoes.map((shoe) => (
@@ -115,20 +160,45 @@ const Home = () => {
                 style={{ width: "200px", height: "200px" }}
               />
               <ul>
-                <li><b>Name:</b> {shoe.name}</li>
-                <li><b>Brand:</b> {shoe.brand}</li>
-                <li><b>Color:</b> {shoe.color}</li>
-                <li><b>Size:</b> {shoe.size}</li>
-                <li><b>Price:</b> ₹{shoe.price}</li>
+                <li>
+                  <b>Name:</b> {shoe.name}
+                </li>
+                <li>
+                  <b>Brand:</b> {shoe.brand}
+                </li>
+                <li>
+                  <b>Color:</b> {shoe.color}
+                </li>
+                <li>
+                  <b>Size:</b> {shoe.size}
+                </li>
+                <li>
+                  <b>Price:</b> ₹{shoe.price}
+                </li>
               </ul>
 
-
-              <div className="counter"
-                style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div
+                className="counter"
+                style={{ display: "flex", alignItems: "center", gap: "10px" }}
+              >
                 <button onClick={() => updateQuantity(shoe.id, -1)}>-</button>
-                <p>{quantities[shoe.id] || 0}</p>
+                {quantities[shoe.id] || 0}
                 <button onClick={() => updateQuantity(shoe.id, 1)}>+</button>
               </div>
+
+             <button
+              onClick={() => toggleWishlist(shoe)}
+              style={{
+              backgroundColor: wishlist.find(item => item.id === shoe.id) ? "green" : "gray",
+              color: "white",
+              padding: "7px",
+              width: "200px",
+              borderRadius: "7px",
+              cursor: "pointer",
+              }}
+              >
+            {wishlist.find(item => item.id === shoe.id) ? "In Wishlist" : "Add to Wishlist"}
+             </button>
 
               <button
                 onClick={() => handleBuy(shoe)}
@@ -146,7 +216,9 @@ const Home = () => {
             </div>
           ))
         ) : (
-          <p style={{ textAlign: "center", fontSize: "18px" }}>No results found.</p>
+          <p style={{ textAlign: "center", fontSize: "18px" }}>
+            No results found.
+          </p>
         )}
       </div>
 
@@ -164,6 +236,22 @@ const Home = () => {
       >
         Go to Cart
       </button>
+     <button
+    onClick={() => router.push(`/Wishlist?userId=${user.id}`)}
+    style={{
+    backgroundColor: "orange",
+    color: "white",
+    padding: "7px",
+    width: "200px",
+    borderRadius: "7px",
+    cursor: "pointer",
+    marginLeft: "20px",
+  }}
+>
+  Go to Wishlist
+</button>
+
+
 
       <div style={{ textAlign: "center" }}>
         <button
