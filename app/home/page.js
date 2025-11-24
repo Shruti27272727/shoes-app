@@ -15,15 +15,15 @@ const Home = () => {
 
   const user = JSON.parse(localStorage.getItem("user"));
   const toggleWishlist = (shoe) => {
-  setWishlist((prev) => {
-    const exists = prev.find(item => item.id === shoe.id);
-    if (exists) {
-      return prev.filter(item => item.id !== shoe.id);
-    } else {
-      return [...prev, shoe];
-    }
-  });
-};
+    setWishlist((prev) => {
+      const exists = prev.find(item => item.id === shoe.id);
+      if (exists) {
+        return prev.filter(item => item.id !== shoe.id);
+      } else {
+        return [...prev, shoe];
+      }
+    });
+  };
 
   const updateQuantity = (id, value) => {
     setQuantities((prev) => {
@@ -103,6 +103,9 @@ const Home = () => {
       >
         Welcome to Shoes.com
       </h1>
+      <p style={{ color: "orange", marginTop: "10px", textAlign: "center", padding: "20px" }}>
+        Apply coupon SAVE100 to get 100/- off
+      </p>
 
       <div style={{ textAlign: "center", marginBottom: "10px" }}>
         <input
@@ -186,19 +189,20 @@ const Home = () => {
                 <button onClick={() => updateQuantity(shoe.id, 1)}>+</button>
               </div>
 
-             <button
-              onClick={() => toggleWishlist(shoe)}
-              style={{
-              backgroundColor: wishlist.find(item => item.id === shoe.id) ? "green" : "gray",
-              color: "white",
-              padding: "7px",
-              width: "200px",
-              borderRadius: "7px",
-              cursor: "pointer",
-              }}
+              <button
+                onClick={() => toggleWishlist(shoe)}
+                style={{
+                  backgroundColor: wishlist.find(item => item.id === shoe.id) ? "green" : "gray",
+                  color: "white",
+                  padding: "7px",
+                  margin: "9px 2px",
+                  width: "200px",
+                  borderRadius: "7px",
+                  cursor: "pointer",
+                }}
               >
-            {wishlist.find(item => item.id === shoe.id) ? "In Wishlist" : "Add to Wishlist"}
-             </button>
+                {wishlist.find(item => item.id === shoe.id) ? "In Wishlist" : "Add to Wishlist"}
+              </button>
 
               <button
                 onClick={() => handleBuy(shoe)}
@@ -231,25 +235,25 @@ const Home = () => {
           width: "200px",
           borderRadius: "7px",
           cursor: "pointer",
-          marginLeft: "660px",
+          marginLeft: "560px",
         }}
       >
         Go to Cart
       </button>
-     <button
-    onClick={() => router.push(`/Wishlist?userId=${user.id}`)}
-    style={{
-    backgroundColor: "orange",
-    color: "white",
-    padding: "7px",
-    width: "200px",
-    borderRadius: "7px",
-    cursor: "pointer",
-    marginLeft: "20px",
-  }}
->
-  Go to Wishlist
-</button>
+      <button
+        onClick={() => router.push(`/Wishlist?userId=${user.id}`)}
+        style={{
+          backgroundColor: "orange",
+          color: "white",
+          padding: "7px",
+          width: "200px",
+          borderRadius: "7px",
+          cursor: "pointer",
+          marginLeft: "20px",
+        }}
+      >
+        Go to Wishlist
+      </button>
 
 
 
