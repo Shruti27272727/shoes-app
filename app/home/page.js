@@ -11,17 +11,36 @@ const Home = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [quantities, setQuantities] = useState({});
   const [sortBy, setSortBy] = useState("");
-  const [wishlist, setWishlist] = useState([]);
+  const [wishlist, setWishlist] = useState(() => {
+    if (typeof window !== "undefined") {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (user && user.id) {
+        return JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
+      }
+    }
+    return [];
+  });
 
   const user = JSON.parse(localStorage.getItem("user"));
   const toggleWishlist = (shoe) => {
+    if (!user || !user.id) {
+      alert("Please log in");
+      return;
+    }
+
     setWishlist((prev) => {
       const exists = prev.find(item => item.id === shoe.id);
+      let updatedWishlist;
+
       if (exists) {
-        return prev.filter(item => item.id !== shoe.id);
+        updatedWishlist = prev.filter(item => item.id !== shoe.id);
       } else {
-        return [...prev, shoe];
+        updatedWishlist = [...prev, shoe];
       }
+
+      localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updatedWishlist));
+
+      return updatedWishlist;
     });
   };
 
