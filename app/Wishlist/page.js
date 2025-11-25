@@ -1,11 +1,11 @@
 "use client";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function Wishlist() {
   const searchParams = useSearchParams();
   const userId = searchParams.get("userId");
-
+  const router = useRouter();
   const [wishlist, setWishlist] = useState([]);
 
  useEffect(() => {
@@ -24,9 +24,26 @@ export default function Wishlist() {
   };
 
   return (
+    
     <div>
       <h1 style={{ textAlign: "center", padding: "20px" }}>Your Wishlist</h1>
-
+       <div >
+        <button
+          onClick={() => router.push("/home")}
+          style={{
+            backgroundColor: "green",
+            color: "white",
+            padding: "10px 20px",
+            borderRadius: "7px",
+            cursor: "pointer",
+            textAlign: "center",
+            marginBottom: "20px",
+            marginLeft:"700px",
+          }}
+        >
+          Go to Home
+        </button>
+      </div>
       {wishlist.length === 0 ? (
         <p style={{ textAlign: "center" }}>No items in wishlist.</p>
       ) : (
