@@ -11,39 +11,50 @@ const Home = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [quantities, setQuantities] = useState({});
   const [sortBy, setSortBy] = useState("");
-  const [wishlist, setWishlist] = useState(() => {
-    if (typeof window !== "undefined") {
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (user && user.id) {
-        return JSON.parse(localStorage.getItem(`wishlist_${user.id}`)) || [];
-      }
-    }
-    return [];
-  });
+  const [wishlist, setWishlist] = useState([]);
 
-  const user = JSON.parse(localStorage.getItem("user"));
-  const toggleWishlist = (shoe) => {
+  const user = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("user")) : null;
+
+
+  useEffect(() => {
+    const loadWishlist = async () => {
+      if (!user || !user.id) return;
+      try {
+        const res = await fetch(`/api/wishlist?userId=${user.id}`);
+        const data = await res.json();
+        setWishlist(data);
+      } catch (err) {
+        console.error("Failed to load wishlist", err);
+      }
+    };
+    loadWishlist();
+  }, []);
+
+
+  const toggleWishlist = async (shoe) => {
     if (!user || !user.id) {
       alert("Please log in");
       return;
     }
 
-    setWishlist((prev) => {
-      const exists = prev.find(item => item.id === shoe.id);
-      let updatedWishlist;
+    const exists = wishlist.find(item => item.shoe_id === shoe.id);
 
-      if (exists) {
-        updatedWishlist = prev.filter(item => item.id !== shoe.id);
-      } else {
-        updatedWishlist = [...prev, shoe];
-      }
-
-      localStorage.setItem(`wishlist_${user.id}`, JSON.stringify(updatedWishlist));
-
-      return updatedWishlist;
-    });
+    if (exists) {
+      await fetch("/api/wishlist", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, shoeId: shoe.id }),
+      });
+      setWishlist(prev => prev.filter(item => item.shoe_id !== shoe.id));
+    } else {
+      await fetch("/api/wishlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, shoe }),
+      });
+      setWishlist(prev => [...prev, { ...shoe, shoe_id: shoe.id }]);
+    }
   };
-
   const updateQuantity = (id, value) => {
     setQuantities((prev) => {
       const current = prev[id] || 0;
@@ -55,23 +66,16 @@ const Home = () => {
 
   const fetchShoes = async (search = "", page = 1, sort = sortBy) => {
     try {
-      const res = await fetch(`/api/shoes?search=${search}&page=${page}`);
+
+      const res = await fetch(`/api/shoes?search=${search}&page=${page}&sort=${sort}`);
       const data = await res.json();
-
-      let sortedShoes = [...data.data];
-
-      if (sort === "low-high") {
-        sortedShoes.sort((a, b) => a.price - b.price);
-      } else if (sort === "high-low") {
-        sortedShoes.sort((a, b) => b.price - a.price);
-      }
-
-      setShoes(sortedShoes);
+      setShoes(data.data);
       setTotalPages(data.totalPages);
     } catch (error) {
       console.error("Error fetching shoes:", error);
     }
   };
+
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -273,9 +277,6 @@ const Home = () => {
       >
         Go to Wishlist
       </button>
-
-
-
       <div style={{ textAlign: "center" }}>
         <button
           onClick={() => handlePageChange(currentPage - 1)}

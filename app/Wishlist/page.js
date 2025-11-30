@@ -8,26 +8,32 @@ export default function Wishlist() {
   const router = useRouter();
   const [wishlist, setWishlist] = useState([]);
 
- useEffect(() => {
-  if (!userId) return;
-  const loadWishlist = () => {
-    const data = JSON.parse(localStorage.getItem(`wishlist_${userId}`)) || [];
-    setWishlist(data);
-  };
-  loadWishlist();
-}, [userId]);
+  useEffect(() => {
+    if (!userId) return;
 
-  const removeItem = (id) => {
-    const updated = wishlist.filter((item) => item.id !== id);
-    setWishlist(updated);
-    localStorage.setItem(`wishlist_${userId}`, JSON.stringify(updated));
+    const loadWishlist = async () => {
+      const res = await fetch(`/api/wishlist?userId=${userId}`);
+      const data = await res.json();
+      setWishlist(data);
+    };
+    loadWishlist();
+  }, [userId]);
+
+  const removeItem = async (shoeId) => {
+    await fetch("/api/wishlist", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, shoeId }),
+    });
+
+    setWishlist((prev) => prev.filter((item) => item.shoe_id !== shoeId));
   };
 
   return (
-    
     <div>
       <h1 style={{ textAlign: "center", padding: "20px" }}>Your Wishlist</h1>
-       <div >
+
+      <div>
         <button
           onClick={() => router.push("/home")}
           style={{
@@ -36,20 +42,19 @@ export default function Wishlist() {
             padding: "10px 20px",
             borderRadius: "7px",
             cursor: "pointer",
-            textAlign: "center",
-            marginBottom: "20px",
-            marginLeft:"700px",
+            marginLeft: "700px",
           }}
         >
           Go to Home
         </button>
       </div>
+
       {wishlist.length === 0 ? (
         <p style={{ textAlign: "center" }}>No items in wishlist.</p>
       ) : (
         <div className="shoe-grid">
           {wishlist.map((shoe) => (
-            <div key={shoe.id} className="shoe-card">
+            <div key={shoe.shoe_id} className="shoe-card">
               <img
                 src={shoe.img}
                 alt={shoe.name}
@@ -65,7 +70,7 @@ export default function Wishlist() {
               </ul>
 
               <button
-                onClick={() => removeItem(shoe.id)}
+                onClick={() => removeItem(shoe.shoe_id)}
                 style={{
                   backgroundColor: "red",
                   color: "white",
